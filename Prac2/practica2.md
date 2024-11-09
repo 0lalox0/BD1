@@ -185,3 +185,102 @@ I13(#suscripcion, email_adiconal) 4FN
 I14(#suscripcion,#contenido)4FN
 DM1 y DM2 pasan a ser dependencias multievaluadas triviales, ya que son todos los atributos de esquema
 = juanopi
+### 7)
+7. MEDICION_AMBIENTAL(#medicion, #pozo, valor_medicion, #parametro, fecha_medicion,
+cuil_operario, #instrumento, nombre_parametro, valor_ref, descripcion_pozo,
+fecha_perforacion, nombre_parametro, apellido_operario, nombre_operario, fecha_nacimiento,
+marca_instrumento, modelo_instrumento, dominio_vehiculo, fecha_adquisicion)
+Donde:
+● Cada medición es realizada por un operario en un pozo, en una fecha determinada. En
+ella se miden varios parámetros, y para cada uno se obtiene un valor. Notar que un
+mismo parámetro (#parametro) puede ser medido en diferentes mediciones.
+Independientemente de las mediciones, todo parámetro tiene un nombre y valor de
+referencia, y el #parametro es único en el sistema.
+● En cada medición se utilizan varios instrumentos, independientemente de los
+parámetros medidos. De cada instrumento se conoce la marca y modelo.
+● De cada operario se conoce su cuit, nombre, apellido y fecha de nacimiento.
+● La empresa cuenta con vehículos, y de cada uno se conoce la fecha en la que fue
+adquirido. El dominio (patente) de cada vehículo es único en el sistema.
+● Un pozo tiene una descripción y una fecha de perforación. El identificador #pozo es
+único en el sistema
+Dependencias Funcionales
+
+DF1 cuil_operario -> nombre_operario, apellido_operario, fecha_nacimineto X
+DF2 #medicion -> #pozo, fecha_medicion, cuil_operario
+DF3 #parametro -> nombre_parametro, valor_ref
+DF4 #instrumento -> marca_instrumento, modelo_instrumento
+DF5 #pozo -> descripcion_pozo, fecha_perforacion X
+DF6 dominio_vehiculo ->  fecha_adquisicion
+DF7 #medicion, #parametro -> valor_medicion
+CC(#medicion, #parametro, #instrumento,dominio_vehiculo)
+
+Nos preguntamos: MEDICION_AMBIENTAL cumple con la definición de BCNF?
+NO, dado que existe al menos el determinante de la df1 que NO es superclave del 
+esquema MEDICION_AMBIENTAL.
+Por lo tanto, particionamos por la DF1, creando dos nuevas relaciones:
+
+I1(**cuil_operario**,nombre_operario,apellido_operario,fecha_nacimiento)
+
+I2(**#medicion** #pozo, valor_medicion, **#parametro**, fecha_medicion,
+cuil_operario, **#instrumento**, nombre_parametro, valor_ref, descripcion_pozo,
+fecha_perforacion,
+marca_instrumento, modelo_instrumento, **dominio_vehiculo**, fecha_adquisicion)
+
+I1 esta en BCNF ya que solo vale DF1 y el determinante CuilOperario es superclave del esquema I1
+No se pierde información ya que I1 ∩I2 es {cuil_operario}, clave de I1.
+
+I2 no esta en bcnf ya que existe por lo menos DF5 tiene como determinante #pozo y vale en I2 y no es una superclave de este por lo tanto particionamos
+
+I3(**#pozo**, descripcion_pozo, fecha_perforacion)
+I4(**#medicion** #pozo, valor_medicion, **#parametro**, fecha_medicion,
+cuil_operario, **#instrumento**, nombre_parametro, valor_ref,
+ ,marca_instrumento, modelo_instrumento, **dominio_vehiculo**, fecha_adquisicion)
+
+ Same
+
+ Same
+
+ Particiono por DF2 
+
+I5(**#medicion**, #pozo, fecha_medicion,cuil_operario)
+I6(**#medicion** , valor_medicion, **#parametro**, **#instrumento**, nombre_parametro, valor_ref,
+ marca_instrumento, modelo_instrumento, **dominio_vehiculo**, fecha_adquisicion)
+
+ Same 
+ Same
+
+ Particionoi por DF3
+ I7(**#parametro**,nombre_parametro, valor_ref)
+ I8(**#medicion** , valor_medicion, **#parametro**, **#instrumento**,marca_instrumento, modelo_instrumento, **dominio_vehiculo**, fecha_adquisicion)
+
+ Particionoi por DF4
+ I9(**#instrumento**, marca_instrumento,modelo_instrumento)
+
+ I10(**#medicion** , valor_medicion, **#parametro**, **#instrumento**, **dominio_vehiculo**, fecha_adquisicion)
+
+same
+same
+Particiono por DF6
+I11(**dominio_vehiculo**,fecha_adquicicion)
+I12(**#medicion** , valor_medicion, **#parametro**, **#instrumento**, **dominio_vehiculo**)
+
+Particiono por DF7
+
+I13(**#medicion**, **#parametro**,valor_medicion)
+I14(**#medicion**, **#parametro**, **#instrumento**, **dominio_vehiculo**)
+
+FIN BCNF
+
+4FN
+#medicion -> #parametro
+#medicion -> #instrumento
+[] -> #dominio_vehiculo
+I15(**#medicion, #parametro**)
+I16(**medicion,#instrumento**)
+I17(**#dominio_vehiculo**)
+
+I15 es una proyeccion de I13?
+I17 es una proyeccion de I11?
+
+Se elimina I15 y I17
+I13 y I11 no tiene Dm
