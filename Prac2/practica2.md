@@ -388,3 +388,129 @@ uno de estos se conoce un identificador, único en el sistema, el nombre, el tel
 rol que ocupa.
 
 
+Dependencias Funcionales
+
+Df1 #evento -> fecha_evento, motivo_evento, #salon, #grupo
+Df2 #salon -> nombre_salon 
+Df3 #grupo -> nombre_grupo, nro_ingresantes_grupo, #organizador
+Df4 #organizador -> nombre_organizador, telefono_organizador, años_exp_organizador
+Df5 fecha_evento, #organizador -> #grupo !!!
+Df6 #persona_staff -> nombre_persona_staff, telefono_persona_staff, rol_persona_staff
+
+CC:{#evento,#persona_staff}
+
+ORGANIZACION_EVENTOS no esta en BCNF ya que existe por lo menos DF6 que es valida en el esquema y su determinantes {#persona_staff} no es superclave del esquema.
+Por lo tanto particionamos por DF6
+O1{*#persona_staff*,nombre_persona_staff, telefono_persona_staff, rol_persona_staff }
+O2{*#evento*, fecha_evento, motivo_evento, #salon,
+nombre_salon, #grupo, nombre_grupo, nro_integrantes_grupo, #organizador,
+nombre_organizador, telefono_organizador, años_exp_organizador, *#persona_staff*}
+
+O1 esta en BCNF ya que solo es valida la DF6 y su determinante {#persona_staff} es superclave de O1.
+No se pierde informacion ya que al realizar la validacion simple vemos que O1 v O2 = {#persona_staff} es clave de O1
+No se pierden DFs ya que en O1 son validas DF6, y en O2 son Validas Df1,DF2,DF3,DF4,DF5
+
+O2 no esta en BCNf ya que al menos vale la DF4 la cual el determinante {#organizador} no es superclave del esquema O2
+por lo que particionamos O2 por DF4
+O3{*#organizador*,nombre_organizador, telefono_organizador, años_exp_organizador}
+O4{*#evento*, fecha_evento, motivo_evento, #salon,nombre_salon,
+ #grupo, nombre_grupo, nro_integrantes_grupo, #organizador, *#persona_staff*}
+
+O3 esta en BCNF ya que solo vale la DF4 de la cual su determinante {#organizador} es superclave del esquema O3
+Si realziamos la validacion simple: O3 v O4 = {#organizador} el cual es calve de O3 por lo que no perdemos informacion
+No se pierden DFs porque en O3 vale DF4 y en O4 valen Df1,2,3,5
+
+O4 no esta en BCNF porque existe al menos la DF2 la cual es valida en el esquema y su determinante {#salon} no es superclave del esuqema por lo que particionamos por DF2 a O4
+
+O5{*#salon*, nombre_salon}
+O6{*#evento*, fecha_evento, motivo_evento, #salon,#grupo,
+ nombre_grupo, nro_integrantes_grupo, #organizador, *#persona_staff*}
+
+O5 esta en BCNF ya que en el solo vale la DF2 la cual su determinante es superclave de esquema O5
+No se pierde informacion ya que al hacer la validacion simple: O5 v O6 = {#salon} el cual es clave de O5
+NO se pierden DFs ya que en O5 vale df2 y en O6 df1, df3,df5
+
+O6 No esta en BCNF ya que al menos vale la DF3 y su determinante {#grupo} no es superclave del esquema O6
+por lo tanto particiomanos por DF3
+
+O7{*#grupo*,nombre_grupo, nro_ingresantes_grupo, #organizador}
+O8{*#evento*, fecha_evento, motivo_evento, #salon,#grupo, *#persona_staff*}
+
+
+
+Df1 #evento -> fecha_evento, motivo_evento, #salon, #grupo
+Df2 #salon -> nombre_salon 
+Df3 #grupo -> nombre_grupo, nro_ingresantes_grupo, #organizador
+Df4 #organizador -> nombre_organizador, telefono_organizador, años_exp_organizador
+Df5 fecha_evento, #organizador -> #grupo !!!
+Df6 #persona_staff -> nombre_persona_staff, telefono_persona_staff, rol_persona_staff
+
+
+
+O7{*#grupo*,nombre_grupo, nro_ingresantes_grupo, #organizador}
+O8{*#evento*, fecha_evento, motivo_evento, #salon,#grupo, *#persona_staff*}
+
+
+O7 esta en BCNF porque solo vale la DF3 en el y #grupo es superclave de O7
+No se pierde informacion ya que por validacion simple: O7 v O8 = #grupo que es calve de O7
+En O7 vale DF3 y en O8 valen Df1
+Que paso con Df5, se pierde por lo tanto se lleva els esquema a 3FN, volvemos un paso atras antes de la particion de O6
+y partimos O6 por DF5 para 3fn
+O6{*#evento*, fecha_evento, motivo_evento, #salon,#grupo,
+ nombre_grupo, nro_integrantes_grupo, #organizador, *#persona_staff*}
+
+O7{*fecha_evento, #organizador*, #grupo}
+Solo vale Df5 y el determinante es superclave
+particiono por df3
+O8{*#grupo*, nombre_grupo, nro_ingresantes_grupo, #organizador}
+Solo vale Df3 y el determinante es superclave
+particiono por df1
+O9{*#evento*,fecha_evento, motivo_evento, #salon, #grupo}
+Solo vale Df1 y el determinante es superclave
+O10{*#evento*,*persona_staff*}
+Esquemas en 3fn yaque no tiene DF no triviales 
+
+
+
+
+select #grupo from O7, O8 where #organidor = #1 and #fecha_evento = 12/03/2023 
+12/03/2023,#1 -> #grupo= 2
+● De los organizadores se conoce su nombre, teléfono y los años de experiencia que lleva
+en su trabajo. También tiene asociado un número que lo identifica.
+● Cada organizador tiene contrato con muchos grupos, sin embargo este solo organiza
+cada una de sus fechas disponibles con un único grupo, que será el que toque la noche
+del evento.
+● Cada evento contrata a una serie de personas que serán el staff del mismo. De cada
+uno de estos se conoce un identificador, único en el sistema, el nombre, el teléfono y el
+rol que ocupa.
+O1{*#persona_staff*,nombre_persona_staff, telefono_persona_staff, rol_persona_staff }
+O3{*#organizador*,nombre_organizador, telefono_organizador, años_exp_organizador}
+O5{*#salon*, nombre_salon}
+O7{*#grupo*,nombre_grupo, nro_ingresantes_grupo, #organizador}
+O8{*#evento*, fecha_evento, motivo_evento, #salon,#grupo, *#persona_staff*}
+Mientras Res cambia
+Para i= 1 _a_ cant_de_ particiones_realizadasRes = 
+Res ∪((Res ∩ Ri)+ ∩ Ri)
+
+Res = fecha_evento, #organizador
+## O1
+Res ∪((Res ∩ O1)+ ∩ O1)
+
+Res = fecha_evento, #organizador
+## O3
+Res ∪((Res ∩ O3)+ ∩ O3)
+Res U((#organizador)+ v O3)
+Res U O3
+Res = O3 + fecha_evento
+##O5
+Res ∪((Res ∩ O5)+ ∩ O5)
+Res ∪((0)+ ∩ O5)
+Res = O3 + fecha_evento
+## O7
+Res ∪((Res ∩ O7)+ ∩ O7)
+Res ∪((#organizador)+ ∩ O7)
+Res U (#organizador)
+Res = O3 + fecha_evento
+## O8
+Res U ((Res v O8 )+ v O8)
+Res U fecha_evento
