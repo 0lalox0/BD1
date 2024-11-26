@@ -284,3 +284,107 @@ I17 es una proyeccion de I11?
 
 Se elimina I15 y I17
 I13 y I11 no tiene Dm
+
+### 8. FESTIVALES (#festival, denominacion_festival, localidad, cuil_musico, nombre_musico,
+fecha_nacimiento, #banda, nombre_banda, estilo_musical, #tema, nombre_tema, duracion,
+instrumento, cuil_auspiciante, url_plataforma_entradas, #sponsor)
+Donde:
+● Para cada festival se conoce su denominación y la localidad en la que se realiza. Más
+de un festival podría tener la misma denominación.
+● De cada banda se conoce su nombre y estilo musical.
+● De cada músico se conoce su cuil, nombre y su fecha de nacimiento. Tenga en cuenta
+que varios músicos podrían tener el mismo nombre.
+● Para cada tema interpretado por una banda en un festival se conoce su nombre y
+duración. Además, de cada músico que participó en el tema se sabe con qué
+instrumento lo hizo.
+● Los #tema pueden repetirse para las distintas bandas.
+● Un festival puede tener varios auspiciantes, y se vendieron entradas al mismo a través
+de varias plataformas.
+● Se tiene además un registro de todas los sponsors que han participado de los distintos
+festivales realizados
+
+DF1) #festival -> denominacion_festival, localidad
+DF2) #banda -> nombre_banda, estilo_musical
+DF3) cuil_musico -> nombre_musico, fecha_nacimiento
+DF4) #tema, #banda, #festival -> nombre_tema, duracion
+DF5) #tema, #banda, #festival, cuil_musico -> instrumento
+
+CC(#festival,#banda,cuil_musico,#tema,cuil_auspiciante,url_plataforma_entradas, #sponsor)
+
+Festivales no esta en BCNF yaque existe al menos la DF2 la cual su determinante (#banda) no es superclave del esquema
+por lo tanto particiono
+
+F1(*#banda*,nombre_banda,estilo_musical)
+F2(*#festival*, *enominacion_festival, localidad, *cuil_musico*, nombre_musico,
+fecha_nacimiento, *#banda*, *#tema*, nombre_tema, duracion,
+instrumento, *cuil_auspiciante*, *url_plataforma_entradas*, *#sponsor*)
+
+F1 esta en BCNF ya que solo es valida DF2 en ella y su determinante #banda es superclave del esquema
+No se pierden Informacion ya que F1 ∩ F2 = #banda la cual es clave de F1
+No se pierden DF porque en F2 es valida todas las depenencias menos DF2 y en F1 es valida DF2
+
+F2 no esta en BCNF ya que existe al menos DF3 la cual su determinante  cuil_musico no es superclave del esquema
+particiono por DF3
+
+F3(*cuil_musico*,nombre_musico, fecha_nacimiento)
+
+F4(*#festival*, denominacion_festival, localidad, *cuil_musico*, *#banda*, *#tema*, nombre_tema, duracion,
+instrumento, *cuil_auspiciante*, *url_plataforma_entradas*, *#sponsor*)
+
+No se pierde informacion ya uqe F3 ∩ F4 = cuil_musico que es clave de F3 
+NO se pierden DFs ya que en F3 es valida Df3 y en F4 es valida las otras.
+
+
+F5(*festival*,denominacion_festival, localidad)
+
+F6(*#festival*, , *cuil_musico*, 
+fecha_nacimiento, *#banda*, *#tema*, nombre_tema, duracion,
+instrumento, *cuil_auspiciante*, *url_plataforma_entradas*, *#sponsor*)
+
+F7(*#tema*, *#banda*, *#festival*, nombre_tema, duracion)
+F8(*#festival*, , *cuil_musico*,  *#banda*, *#tema*, instrumento, *cuil_auspiciante*, *url_plataforma_entradas*, *#sponsor*)
+
+F9(*#tema*, *#banda*, *#festival*,*cuil_auspiciante*,instrumento)
+F10(*#festival* , *cuil_musico*,  *#banda*, *#tema*, *cuil_auspiciante*, *url_plataforma_entradas*, *#sponsor*)
+
+Particones en BCNF
+
+F1(*#banda*,nombre_banda,estilo_musical)
+F3(*cuil_musico*,nombre_musico, fecha_nacimiento)
+F5(*festival*,denominacion_festival, localidad)
+F7(*#tema*, *#banda*, *#festival*, nombre_tema, duracion)
+F9(*#tema*, *#banda*, *#festival*,*cuil_auspiciante*,instrumento)
+F10(*#festival*, *cuil_musico*,  *#banda*, *#tema*, *cuil_auspiciante*, *url_plataforma_entradas*, *#sponsor*)
+
+Clave:(*#festival*,*#banda*,*cuil_musico*,*#tema*,*cuil_auspiciante*,*url_plataforma_entradas*, *#sponsor*)
+
+DM
+DM1 #festival ->> cuil_auspiciante
+DM2 #festival ->> url_plataforma_entradas
+DM3 {} ->> #sponsor
+DM4 #banda ->> *cuil_musico* '????
+DM5 #banda ->> tema ??????
+
+
+### 11. ORGANIZACION_EVENTOS (#evento, fecha_evento, motivo_evento, #salon,
+nombre_salon, #grupo, nombre_grupo, nro_integrantes_grupo, #organizador,
+nombre_organizador, telefono_organizador, años_exp_organizador, #persona_staff,
+nombre_persona_staff, telefono_persona_staff, rol_persona_staff)
+Donde:
+● De cada evento se conoce un identificador, que es único, la fecha, el motivo, el salón de
+fiestas donde se desarrollará y el grupo que tocará en el mismo.
+● De cada salón de fiestas posible se conoce un número identificador, único en el sistema
+y su nombre.
+● De los grupos se conoce un identificador (único) su nombre y la cantidad de integrantes
+que lo conforman. Además, se sabe que cada grupo de los registrados en el sistema
+tiene un contrato de exclusividad con un único organizador.
+● De los organizadores se conoce su nombre, teléfono y los años de experiencia que lleva
+en su trabajo. También tiene asociado un número que lo identifica.
+● Cada organizador tiene contrato con muchos grupos, sin embargo este solo organiza
+cada una de sus fechas disponibles con un único grupo, que será el que toque la noche
+del evento.
+● Cada evento contrata a una serie de personas que serán el staff del mismo. De cada
+uno de estos se conoce un identificador, único en el sistema, el nombre, el teléfono y el
+rol que ocupa.
+
+
