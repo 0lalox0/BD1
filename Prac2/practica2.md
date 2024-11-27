@@ -365,6 +365,131 @@ DM3 {} ->> #sponsor
 DM4 #banda ->> *cuil_musico* '????
 DM5 #banda ->> tema ??????
 
+### 9 TORNEOS (#torneo, nombre_torneo, año, #equipo, nombre_equipo, estadio_equipo, puesto,
+#reglamentacion, descripcion, #auspiciante)
+
+● De cada torneo, se conoce su identificador (#torneo, único en el sistema) y un nombre.
+Un mismo torneo tiene diferentes ediciones, cada edición se realiza en un año
+determinado y el mismo torneo no puede repetirse el mismo año. En un año pueden
+realizarse varios torneos.
+● Cada edición de un torneo tiene diferentes auspiciantes, identificados por #auspiciante
+(único en el sistema).
+● En cada edición de un torneo participan varios equipos. De cada equipo se conoce su
+nombre, su estadio y su #equipo, que no se repite para diferentes equipos.
+● Cada equipo finaliza una edición de un torneo en un puesto. Dos o más equipos no
+pueden finalizar en un mismo puesto.
+● Además, se conoce un conjunto de reglamentaciones, identificadas por
+#reglamentación, aplicables a estos torneos.
+
+
+Se analiza
+
+
+DF1  #Torneo -> nombre_torneo
+DF2  #Equipo -> nombre_equipo,estadio_equipo
+DF3  #Torneo,Ano,Equipo -> Puesto
+DF4  Puesto,Ano,#Torneo -> Equipo
+
+CC{**#Torneo,#Equipo,Ano,#Auspiciante,#Reglamentacion,Desc_R**}
+CC{**#Torneo,Ano,Puesto,#Auspiciante,#Reglamentacion,Desc_R**}
+
+se elije la clave candidate {**#Torneo,#Equipo,Ano,#Auspiciante,#Reglamentacion,Desc_R**}
+
+El esquema Torneo no se encuentra en BCNF puesto que existe la DF2, la cual es valida en el esquema y su determinante {#Equipo} no es superclave del esquema por lo tanto particionamos el esquema en 2 F1 Y F2 siguiendo DF2: #Equipo -> nombre_equipo,estadio_equipo
+
+F1(#Equipo,nombre_equipo,estadio_equipo)
+F2(#torneo, nombre_torneo, año, #equipo, puesto,#reglamentacion, descripcion, #auspiciante)
+
+Si realizamos F1 V F2 -> {#Equipo}. #Esquipo es clave del esquema F1 por lo que no perdemos info
+No se pierden df ya que en F1 valen DF2 y en F2 valen DF1,DF3,DF4
+
+F1 esta en BCNF ya que solo vale la df2 y el determinante de la df2 es superclave del esquema
+
+F2 no esta en BCNF puesto que tiene al menos el determinante de df1 no es superclave del esquema.
+puesto particionamos el esquema en 2 F3 Y F4 siguiendo la DF1: #Torneo -> nombre_torneo
+
+F3(#Torneo, nombre_torneo)
+F4(#torneo, año, #equipo, puesto,#reglamentacion, descripcion, #auspiciante)
+
+Si realizamos F3 V F4 -> {#Torneo}. #Torneo es clave del esquema F3 por lo que no perdemos info
+No se pierden DF ya que en F3 valen DF1 y en F4 valen DF3,DF4
+
+F3 esta en BCNF ya que solo vale la df1 y el determinante de la df1 es superclave del esquema
+
+F4 No esta en BCNF puesto que tiene al menos el determinante de df3 no es superclave del esquema.
+puesto que particionamos el esquema en 2 F5 Y F6 siguiendo la DF3: #Torneo,Ano,Equipo -> Puesto
+
+F5(#Torneo,Ano,Equipo,Puesto)
+F6(#torneo, año, #equipo,#reglamentacion, descripcion, #auspiciante)
+
+
+F5 esta en bcnf ya que en ella solo valen DF3 Y DF4 cuyo determinantes: {#Torneo,Ano,Equipo},{#Torneo,Ano,Puesto} son superclaves de F5
+si realizamos F5 V F6 -> {#Torneo,Ano,Equipo}. #Torneo,Ano,Equipo es clave del esquema F5 no se pierde informacion
+
+F6 esta BNCF puesto que no tiene DF no triviales de las cuales su determinantes no son superclave del esquema, en este caso no tiene df no triviales
+
+Resultado: 
+
+F1(#Equipo,nombre_equipo,estadio_equipo)
+F3(#Torneo, nombre_torneo)
+F5(#Torneo,Ano,Equipo,Puesto)
+F6(#torneo, año, #equipo,#reglamentacion, descripcion, #auspiciante)
+
+Clave: {**#Torneo,#Equipo,Ano,#Auspiciante,#Reglamentacion,Desc_R**}
+
+
+DM :
+
+    DM1: ANO,#TORNEO ->> #AUSPICIANTES
+    DM2: ANO,#TORNEO ->> #Equipo
+    DM3: {} ->> #reglamentacion
+    DM4: {} ->> desc
+
+
+F6 esta en BCNF pero no esta en 4FN debido a que existe la DM1 la cual no es trivial por lo que particionamos usando DM1: ANO,#TORNEO ->> #AUSPICIANTES
+
+F7(ANO,#TORNEO, #AUSPICIANTES) 
+F8(#torneo, año, #equipo,#reglamentacion, descripcion)
+
+F7 esta en 4FN ya que no valen dependecias multivaluadas que no sean triviales
+
+F8 esta en BCNF pero no esta en 4FN debido a que existe la DM2 la cual no es trivial, por lo que particionamos usando DM2:DM2: ANO,#TORNEO ->> #Equipo
+
+F9(ANO,#TORNEO, #Equipo)
+F10(#torneo, año,#reglamentacion, descripcion)
+
+F9 esta en 4FN ya que no valen dependecias multivaludas que no sean triviales
+
+F10 esta en BCNF pero no esta en 4FN debido a que existe la DM3 la cual no es trivial, por lo que particionam,os usando DM3:{} ->> #reglamentacion
+
+
+
+
+esquemas en 4fn:
+
+F1(#Equipo,nombre_equipo,estadio_equipo)
+F3(#Torneo, nombre_torneo)
+F5(#Torneo,Ano,Equipo,Puesto)
+F7(ANO,#TORNEO, #AUSPICIANTES) 
+F9(ANO,#TORNEO, #Equipo)
+F11(#reglamentacion)
+F13(descripcion)
+F14(#torneo, año)
+
+
+esquemas sin proyeciones
+
+F14 es una proyecion de F5,F7,F9 ya puede deducirse a travez de los atributos de ese esquema se elimina del mismo
+
+resultado: 
+
+F1(#Equipo,nombre_equipo,estadio_equipo)
+F3(#Torneo, nombre_torneo)
+F5(#Torneo,Ano,Equipo,Puesto)
+F7(ANO,#TORNEO, #AUSPICIANTES) 
+F9(ANO,#TORNEO, #Equipo)
+F11(#reglamentacion)
+F13(descripcion)
 
 ### 11. ORGANIZACION_EVENTOS (#evento, fecha_evento, motivo_evento, #salon,
 nombre_salon, #grupo, nombre_grupo, nro_integrantes_grupo, #organizador,
@@ -493,11 +618,11 @@ Para i= 1 _a_ cant_de_ particiones_realizadasRes =
 Res ∪((Res ∩ Ri)+ ∩ Ri)
 
 Res = fecha_evento, #organizador
-## O1
+#### O1
 Res ∪((Res ∩ O1)+ ∩ O1)
 
 Res = fecha_evento, #organizador
-## O3
+#### O3
 Res ∪((Res ∩ O3)+ ∩ O3)
 Res U((#organizador)+ v O3)
 Res U O3
@@ -506,11 +631,173 @@ Res = O3 + fecha_evento
 Res ∪((Res ∩ O5)+ ∩ O5)
 Res ∪((0)+ ∩ O5)
 Res = O3 + fecha_evento
-## O7
+#### O7
 Res ∪((Res ∩ O7)+ ∩ O7)
 Res ∪((#organizador)+ ∩ O7)
 Res U (#organizador)
 Res = O3 + fecha_evento
-## O8
+#### O8
 Res U ((Res v O8 )+ v O8)
 Res U fecha_evento
+
+
+
+### 13. PAGOS (#empleado, dni, nombre, fecha_ingreso, #sucursal, ciudad, telefono,
+#departamento, #pago, monto_pago, fecha_pago, #honorario, descripcion_h, monto_h)
+● La inmobiliaria dispone de varias sucursales, identificada por #sucursal, de las cuales se
+conoce la ciudad donde está ubicada y un teléfono de contacto
+● De cada empleado, que trabaja únicamente en una sucursal, se conoce su número
+interno (no se repite para diferentes empleados de la inmobiliaria), dni, nombre y fecha
+de ingreso.
+● Los #identifican un departamento en alquiler que administra la inmobiliaria y no puede
+repetirse en las diferentes sucursales. La inmobiliaria asigna a cada departamento
+varios empleados para que los administren.
+● Los #pagos son secuenciales para cada departamento que posee la inmobiliaria (no
+pueden repetirse para el mismo departamento) y se almacena el monto y la fecha de
+dicho pago. No se registra la sucursal donde se realizó el pago.
+● La inmobiliaria registra todos los honorarios que percibe, de estos se conoce su
+#honorario (único en el sistema), el monto y una descripción.
+
+Dependencias Funcionales
+DF1 #sucursal -> ciudad, telefono
+Df2 #empleado -> #sucursal, dni, nombre, fecha_ingreso
+Df3 dni -> #sucursal, #empleado , nombre, fecha_ingreso
+Df4 #departamento -> #sucursal No Va
+Df5 #departamento,#pago -> monto_pago, fecha_pago
+Df6 #honorario -> monto_h , descripcion_h
+
+CC1{#empleado, #departamento, #pago,#honorario}
+CC2{dni,#departamento, #pago, #honorario}
+
+
+Pagos no esta en BCNF ya que existe por lo menos la DF1, la cual es valida en el esquema y su determinantes #sucursal no es superclave del esquema. Por lo tanto particionamos Pagos por df1
+
+P1(*#sucursal*,ciudad,telefono)
+P2(#empleado, dni, nombre, fecha_ingreso, #sucursal,#departamento,
+ #pago, monto_pago, fecha_pago, #honorario, descripcion_h, monto_h)
+
+P1 esta en BCNF ya que solo es valida la df1 en el y su determinante {#sucursal} es superclave de P1
+No se pierde informacion ya que por validaccion simple vemos que P1 v P2 = #sucursal la cual es clave en P1
+No se pierden DFs ya que en P1 valen df1 y en P2 valen el resto
+
+P2 no esta en BCNF ya que por lo menos vale Df2 en ella y su determinante{#empleado} no es superclave de p2
+por lo tanto particionamos P2 por la Df2
+
+P3(*#empleado*,#sucursal, dni, nombre, fecha_ingreso)
+P4(#empleado,#departamento,#pago, monto_pago,
+ fecha_pago, #honorario, descripcion_h, monto_h)
+
+ P3 esta en BCNF ya que solo valen df2 y df3 en ella y dni y #cliente son sus determinatnes y superclave
+ No se pierde informacion ya que p3 v p4 = #empleado q es clave de p3
+ No dfs se pirden ya que en p3 valen df2 y 3 y en p4 df5 y df6
+ P4 no esta en BCNF porque existe por lo menos df5 cuyo determinante {departamento,¨Pago} no es superclave del esquema
+ por lo tanto particionamos P4 por la df5
+ P5(**#departamento,#pago**, monto_pago, fecha_pago)
+P6(#empleado,#departamento,#pago, #honorario, descripcion_h, monto_h)
+ 
+ P5 esta en BCV
+
+ P6 
+ P7(*#honorario*,monto_h , descripcion_h)
+ P8(#empleado,#departamento,#pago,#honorario)
+
+ x
+Clave Primaria:{#empleado, #departamento, #pago,#honorario}
+ Dms
+dm1#departamento -> #empleado
+dm2#departamento ->  #pago
+dm3{} > #honorario
+
+P9(*#honorario*)
+P9 esta en 4FN porque no tiene dependencias multivaluadas no triviales
+
+p10(#empleado,#departamento,#pago)
+P10 no esta en 4Fn porque en ella vale la DM2 la cual no es trivial
+
+P11(#departamento,#pago)
+P11 esta en 4FN porque no tiene dependencias multivaluadas no triviales
+
+P12(#departamento,#empleado)
+P12 esta en 4FN porque no tiene dependencias multivaluadas no triviales
+
+Tablas finales en 4FN que no son proyecciones
+(P11 es proyeccion de p5
+P9 es proyeccion de P7
+)
+P1(*#sucursal*,ciudad,telefono)
+P3(*#empleado*,#sucursal, dni, nombre, fecha_ingreso)
+P5(**#departamento,#pago**, monto_pago, fecha_pago)
+P7(*#honorario*,monto_h , descripcion_h)
+P12(*#departamento,#empleado*)
+
+
+### 10. DISPOSITIVOS (marca_id, descripMarca, modelo_id, descripModelo, equipo_tipo_id,
+descripEquipoTipo, nombreEmpresa, cuit, direcciónEmpresa, usuario_id, apyn,
+direcciónUsuario, cuil, plan_id, descripPlan, importe, equipo_id, imei, fec_alta, fec_baja,
+observaciones, línea_id, fec_alta_linea, fec_baja_linea)
+Donde:
+● Para cada equipo interesa conocer su tipo, modelo, imei, fecha en que se dio de alta,
+fecha en que se da de baja y las observaciones que sean necesarias.
+● De cada marca se conoce su descripción
+● De cada modelo se conoce su descripción y a qué marca pertenece.
+● Para cada plan, se registra qué empresa lo brinda, descripción e importe del mismo.
+● Para cada tipo de equipo se conoce la descripción
+● Para cada empresa se registra el nombre, cuit y dirección
+● De cada usuario se registra su nombre y apellido, número de documento, dirección y
+CUIL
+● Para cada línea se necesita registrar qué plan posee, la fecha de alta de la línea, la
+fecha de baja, el equipo que la posee y el usuario de la misma.
+
+Df1 marca_id -> descipMarca X
+Df2 modelo_id -> descripModelo X
+Df3 plan_id -> descripPlan, importe, cuit X
+df4 equipo_tipo_id -> descipEquipoTipo X
+Df5 cuit -> nombreEmpresa, direccionEmpresa
+Df6 cuil -> apyn, direccionUsuario, usuario_id
+Df7 usuario_id-> apyn, direccionUsuario, cuil 
+Df8 linea_id -> fec_alta_linea, fec_baja_linea, plan_id, usuario_id, equipo_id
+Df9 linea_id -> fec_alta_linea, fec_baja_linea, plan_id, cuil, equipo_id
+df10 equipo_id -> imei, fec_alta,fec_baja equipo_tipo_id, modelo_id, marca_id  X
+
+CC{*linea_id,observaciones*}
+Dispositivos no este en BCNF yaque existe la Df1 la cual es valida en este esquema y su determinante marca_id no es superclave del esquema, por lo tanto particionamos F1 por df1
+F1(*marca_id*, descipMarca)
+F2(*marca_id*,, modelo_id, descripModelo, equipo_tipo_id,
+descripEquipoTipo, nombreEmpresa, cuit, direcciónEmpresa, usuario_id, apyn,
+direcciónUsuario, cuil, plan_id, descripPlan, importe, equipo_id, imei, fec_alta, fec_baja,
+observaciones, línea_id, fec_alta_linea, fec_baja_linea)
+F1 estaen BCNF yaque solo es valida en el la df1 y marca_id el determinate de la misma es superclave de F1
+No se pierde INformacion yaque por validacion simple da F1 v F2 = marca_id clave de F1
+No se pierde Dfs ya que en F2 valen el resto de Dfs y en f1 vale Df1
+
+F3(*modelo_id*, descripModelo)
+F5(*equipo_tipo_id*, descipEquipoTipo)
+F7(*cuit*, nombreEmpresa, direccionEmpresa)
+F9(*plan_id*,descripPlan, importe, cuit)
+F11(*equipo_id*,imei, fec_alta,fec_baja equipo_tipo_id, modelo_id, marca_id )
+f12(usuario_id, apyn,direcciónUsuario, 
+cuil, plan_id, equipo_id,observaciones, 
+línea_id, fec_alta_linea, fec_baja_linea)
+
+F13(*usuario_id*,apyn, direccionUsuario, cuil)
+F14(usuario_id, plan_id, equipo_id,observaciones, 
+línea_id, fec_alta_linea, fec_baja_linea)
+F13 esta en BCNF ya que en solo son validas Df6 y 7  y sus determinantes {usuario_id} y {cuil} son superclaves del esquema
+no se pierde info yaque f13 v f14 = usuario_id la cual es clave en f13
+no se pierden dfs ya que en f13 valen df6 y 7 y en f14 valen df8
+y no queda valida df9 pero no se pierde ya que de manera indirecta podemos conseguir los determinados con su determinante atraves de df8 linea_id -> usuario_id y df7 usuario_id -> cuil y de manera directa en f14 conseguimos el resto de los atributos determinados por df9
+
+F15(*linea_id*,fec_alta_linea, fec_baja_linea, plan_id, usuario_id, equipo_id)
+F16(*linea_id,observaciones*)
+no hay dms no triviales
+
+Esquemas en 4FN
+F1(*marca_id*, descipMarca)
+F3(*modelo_id*, descripModelo)
+F5(*equipo_tipo_id*, descipEquipoTipo)
+F7(*cuit*, nombreEmpresa, direccionEmpresa)
+F9(*plan_id*,descripPlan, importe, cuit)
+F11(*equipo_id*,imei, fec_alta,fec_baja equipo_tipo_id, modelo_id, marca_id )
+F13(*usuario_id*,apyn, direccionUsuario, cuil)
+F15(*linea_id*,fec_alta_linea, fec_baja_linea, plan_id, usuario_id, equipo_id)
+F16(*linea_id,observaciones*)
